@@ -4,13 +4,16 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 
 // You must insrte the extension if you want import file localy
-// import connectDB from "./config/db.js"
+import connectDB from "./config/db.js"
 import authRoutes from "./routes/authRoutes.js";
-// import {errorHandler} from "./middleware/errorMiddleware.js"
+import notFoundError from "./utils/notFoundError.js";
+import {errorHandler} from "./middleware/errorMiddleware.js"
 
 dotenv.config();
 
 const app = express();
+
+connectDB();
 
 // Middleware for parsing JSON and urlencoded form data
 app.use(express.json());
@@ -30,22 +33,20 @@ app.use(express.static("public"));
 // app.use("/api/auth", authRoutes);
 // You could add other routes here, e.g., app.use('/api/users', userRoutes);
 
-app.use((error, req, res, next) => {
-  res.status(error.status || 500).json({
-    message: error.message || "Intrnal Server",
-    status: error.status || 500,
-  });
+
+app.all(/(.*)/, (req, res, next) => {
+
+  next(new notFoundError(404, "Ther is No route exsists")); // This forwards the error to your error-handling middleware
 });
 
-app.get("/error", (req, res, next) => {
-  const err = new Error("TUndifinde Route");
-  next(err); // This will trigger the error handler
-});
+// Error-handling middleware
+
+
 
 // --- Error Handling Middleware ---
 // IMPORTANT: Error handler must be the LAST piece of middleware added
 
-// app.use(errorHandler);
+app.use(errorHandler);
 
 // Start the server
 const PORT = process.env.PORT || 5000;
